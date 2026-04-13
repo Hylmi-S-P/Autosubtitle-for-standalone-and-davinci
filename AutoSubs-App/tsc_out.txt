@@ -1,0 +1,7 @@
+﻿src/components/subtitles/speaker-settings.tsx(9,19): error TS2305: Module '"@/types/interfaces"' has no exported member 'ColorModifier'.
+src/components/subtitles/speaker-settings.tsx(133,39): error TS2339: Property 'fill' does not exist on type 'Speaker'.
+src/components/subtitles/speaker-settings.tsx(134,82): error TS2353: Object literal may only specify known properties, and 'fill' does not exist in type 'Speaker'.
+src/components/subtitles/speaker-settings.tsx(138,39): error TS2339: Property 'outline' does not exist on type 'Speaker'.
+src/components/subtitles/speaker-settings.tsx(139,82): error TS2353: Object literal may only specify known properties, and 'outline' does not exist in type 'Speaker'.
+src/components/subtitles/speaker-settings.tsx(143,39): error TS2339: Property 'border' does not exist on type 'Speaker'.
+src/components/subtitles/speaker-settings.tsx(144,82): error TS2353: Object literal may only specify known properties, and 'border' does not exist in type 'Speaker'.

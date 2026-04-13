@@ -1,0 +1,104 @@
+{
+  "$schema": "https://schema.tauri.app/config/2.0.0",
+  "productName": "AutoSubs",
+  "version": "3.5.0",
+  "identifier": "com.autosubs",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "titleBarStyle": "Overlay",
+        "decorations": true,
+        "trafficLightPosition": {
+          "x": 10,
+          "y": 20
+        },
+        "height": 700,
+        "width": 900,
+        "acceptFirstMouse": true,
+        "zoomHotkeysEnabled": true,
+        "title": ""
+      }
+    ],
+    "security": {
+      "csp": null,
+      "assetProtocol": {
+        "enable": true,
+        "scope": [
+          "$DESKTOP/**",
+          "$DOCUMENT/**",
+          "$DOWNLOAD/**",
+          "$RESOURCE/**"
+        ]
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "nsis",
+      "app",
+      "deb",
+      "appimage"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": [
+      "resources/"
+    ],
+    "externalBin": [
+      "binaries/ffmpeg"
+    ],
+    "macOS": {
+      "minimumSystemVersion": "13.3"
+    },
+    "linux": {
+      "deb": {
+        "files": {
+          "/opt/resolve/Fusion/Scripts/Utility/AutoSubs.lua": "resources/AutoSubs.lua",
+          "/opt/resolve/Fusion/Scripts/Utility/AutoSubs": "resources/AutoSubs/"
+        }
+      }
+    },
+    "windows": {
+      "nsis": {
+        "template": "./windows/custom_installer.nsi",
+        "installerHooks": "./windows/hooks.nsi",
+        "installerIcon": "icons/icon.ico"
+      },
+      "certificateThumbprint": "df6635960a607103e4882c0671c2f8d0ef2ace18",
+      "timestampUrl": "http://time.certum.pl",
+      "digestAlgorithm": "sha256",
+      "signCommand": {
+        "cmd": "powershell.exe",
+        "args": [
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-File",
+          "./windows/sign.ps1",
+          "%1"
+        ]
+      }
+    },
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEFENjNBQjZFRkVCQTQxQTkKUldTcFFiciticXRqcmZtTlRWRzdnSHhBMFVNZkxvOGFRZThXdXFNQjFzakxqNDF0bUFyWkhwckUK",
+      "endpoints": [
+        "https://github.com/tmoroney/auto-subs/releases/latest/download/latest.json"
+      ]
+    }
+  }
+}

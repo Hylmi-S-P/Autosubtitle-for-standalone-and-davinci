@@ -1,0 +1,7 @@
+[package]
+name = "debug_bindgen"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bindgen-cli = "0.72.1"

@@ -1,0 +1,456 @@
+{
+  "settings": {
+    "title": "Ajustes",
+    "description": "Configura tus preferencias y opciones de AutoSubs.",
+    "sections": {
+      "transcription": "Transcripción",
+      "support": "Soporte",
+      "appearance": "Apariencia",
+      "language": "Idioma"
+    },
+    "gpu": {
+      "title": "Aceleración por GPU",
+      "description": "Usa la GPU para una transcripción más rápida"
+    },
+    "dtw": {
+      "title": "Warping de Tiempo Dinámico",
+      "description": "Mejora la precisión del tiempo a nivel de palabra"
+    },
+    "uiLanguage": {
+      "title": "Idioma de la aplicación",
+      "description": "Actualiza menús y botones",
+      "showPickerAgain": "Mostrar selector de idioma otra vez"
+    },
+    "reset": {
+      "button": "Restablecer ajustes",
+      "confirm": "¿Seguro que quieres restablecer todos los ajustes a los valores predeterminados? Esto no se puede deshacer.",
+      "confirmTitle": "Restablecer ajustes"
+    },
+    "support": {
+      "supportAutoSubs": "Apoyar AutoSubs",
+      "helpSupportDevelopment": "Ayuda a apoyar el desarrollo",
+      "viewSource": "Ver código fuente"
+    }
+  },
+  "common": {
+    "close": "Cerrar",
+    "cancel": "Cancelar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "saveChanges": "Guardar cambios",
+    "apply": "Aplicar",
+    "add": "Añadir",
+    "done": "Listo",
+    "delete": "Eliminar",
+    "generateSubtitles": "Generar subtítulos"
+  },
+  "importExport": {
+    "button": "Exportar / Importar",
+    "importTab": "Importar",
+    "exportTab": "Exportar",
+    "dropHere": "Suelta el archivo aquí o haz clic para seleccionarlo",
+    "supportsSrt": "Compatible con archivos .srt",
+    "selected": "Seleccionado:",
+    "importFile": "Importar archivo",
+    "includeSpeakerLabels": "Incluir etiquetas de hablante",
+    "exportAsSrt": "Exportar como SRT",
+    "exportAsJson": "Exportar como JSON",
+    "downloadFormat": "Descargar {{format}}",
+    "fileDialog": {
+      "subtitleFiles": "Archivos de subtítulos"
+    },
+    "exportFormats": {
+      "srt": {
+        "title": "Subtítulos (.srt)",
+        "description": "Formato estándar de subtítulos para apps como YouTube y VLC. Incluye marcas de tiempo."
+      },
+      "txt": {
+        "title": "Transcripción (.txt)",
+        "description": "Exportación de texto plano para LLMs que incluye etiquetas de hablante cuando están disponibles."
+      }
+    }
+  },
+  "actionBar": {
+    "common": {
+      "auto": "Auto",
+      "on": "Activado",
+      "off": "Desactivado"
+    },
+    "mode": {
+      "fileInput": "Archivo",
+      "timeline": "Línea de tiempo"
+    },
+    "format": {
+      "button": "Formato",
+      "removePunctuationTitle": "Quitar puntuación",
+      "removePunctuationDescription": "Elimina comas, puntos, etc.",
+      "textCaseTitle": "Mayúsculas/minúsculas",
+      "textCaseDescription": "Modifica el estilo del texto",
+      "textCase": {
+        "normal": "Normal",
+        "lowercase": "minúsculas",
+        "uppercase": "MAYÚSCULAS",
+        "titleCase": "Tipo título"
+      },
+      "characterLimitTitle": "Límite de caracteres",
+      "characterLimitDescription": "Por línea (0 = auto)",
+      "lineCountTitle": "Número de líneas",
+      "lineCountDescription": "Máx. líneas por subtítulo"
+    },
+    "censor": {
+      "title": "Censurar palabras",
+      "wordCount": "{{count}} palabras",
+      "dialogTitle": "Censurar palabras sensibles",
+      "dialogDescription": "Añade palabras para censurarlas en los subtítulos.",
+      "inputPlaceholder": "Añadir palabra a censurar",
+      "empty": "Aún no hay palabras censuradas."
+    },
+    "speakers": {
+      "title": "Etiquetas de hablante",
+      "description": "Identifica diferentes hablantes",
+      "countTitle": "Número de hablantes",
+      "disabled": "Desactivado"
+    },
+    "tracks": {
+      "selectTracks": "Selecciona pistas...",
+      "trackN": "Pista {{n}}",
+      "countSelected": "{{count}} pistas seleccionadas",
+      "selectedLabel": "{{label}} seleccionada",
+      "noneSelected": "Ninguna pista seleccionada",
+      "clickToSelect": "Haz clic para seleccionar pistas de audio",
+      "selectAll": "Seleccionar todo",
+      "clearAll": "Limpiar",
+      "noneFound": "No se encontraron pistas de audio.",
+      "createTrack": "Crea una pista de audio en tu línea de tiempo para empezar a transcribir.",
+      "selectMultiple": "Haz clic para seleccionar múltiples pistas"
+    },
+    "fileDrop": {
+      "aria": "Suelta un archivo de audio aquí o haz clic para seleccionar",
+      "prompt": "Suelta o haz clic",
+      "supports": "La mayoría de formatos"
+    },
+    "fileDialog": {
+      "mediaFiles": "Archivos multimedia (compatibles con ffmpeg)"
+    },
+    "language": {
+      "source": "Origen",
+      "translate": "Traducir",
+      "searchSourcePlaceholder": "Buscar idiomas...",
+      "searchTargetPlaceholder": "Buscar idiomas de destino...",
+      "noLanguageFound": "No se encontró ningún idioma.",
+      "arrow": "→"
+    }
+  },
+  "speakerEditor": {
+    "title": "Editar hablantes",
+    "description": "Estos son los hablantes detectados en el audio.",
+    "jumpToSample": "Saltar a la muestra en la línea de tiempo",
+    "name": "Nombre",
+    "namePlaceholder": "Introduce el nombre del hablante",
+    "outputTrack": "Pista de salida",
+    "selectTrack": "Selecciona una pista",
+    "appearance": "Apariencia",
+    "colors": {
+      "fill": "Relleno",
+      "outline": "Contorno",
+      "border": "Borde"
+    },
+    "generatingPreview": "Generando vista previa...",
+    "generatePreview": "Generar vista previa",
+    "subtitlePreview": "Vista previa del subtítulo",
+    "continueEditing": "Seguir editando",
+    "saveAndAddToTimeline": "Guardar y añadir a la línea de tiempo"
+  },
+  "workspace": {
+    "empty": {
+      "loadingModel": "Cargando el modelo en memoria...",
+      "welcomeTitle": "Bienvenido a AutoSubs",
+      "welcomeDescription": "Selecciona una fuente de audio para empezar a generar subtítulos.",
+      "support": "Apoyar AutoSubs"
+    }
+  },
+  "modelStatus": {
+    "cached": "En caché",
+    "available": "Disponible",
+    "storage": "Almacenamiento:",
+    "ram": "RAM:",
+    "accuracy": "Precisión",
+    "lightweight": "Ligero",
+    "downloadProgress": "{{progress}}%"
+  },
+  "models": {
+    "searchPlaceholder": "Buscar modelos...",
+    "noResults": "No se encontraron modelos.",
+    "filteredByLanguage": "Modelos filtrados por idioma",
+    "groups": {
+      "specialized": "Especializado para el idioma seleccionado",
+      "general": "Modelos generales"
+    },
+    "filters": {
+      "weight": "Ligero",
+      "accuracy": "Precisión", 
+      "recommended": "Recomendado",
+      "search": "Buscar",
+      "clear": "Limpiar filtro"
+    },
+    "englishOnly": {
+      "title": "Modelos solo en inglés",
+      "description": "Mostrar modelos especializados en inglés con mayor precisión."
+    },
+    "manage": {
+      "title": "Gestionar modelos descargados",
+      "description": "Elimina modelos en caché para liberar espacio.",
+      "empty": "No se encontraron modelos descargados",
+      "deleteModel": "Eliminar modelo",
+      "confirmTitle": "¿Estás seguro?",
+      "confirmBody": "Esto eliminará el modelo {{model}} de tu dispositivo. Si lo usas en el futuro, tendrás que descargarlo de nuevo."
+    },
+    "diarize": {
+      "label": "Modelo de diarización de hablantes",
+      "description": "Paquete de etiquetado de hablantes",
+      "details": "Se utiliza para la diarización y el etiquetado de hablantes.",
+      "badge": "Etiquetas de hablante"
+    },
+    "tiny": {
+      "label": "Whisper Diminuto",
+      "description": "Ultra-rápido",
+      "details": "Transcripción muy rápida con poca memoria. Ideal para borradores rápidos.",
+      "badge": "Multilingüe"
+    },
+    "tiny_en": {
+      "label": "Whisper Diminuto",
+      "description": "Ultra-rápido",
+      "details": "Transcripción en inglés muy rápida con poca memoria. Ideal para borradores rápidos.",
+      "badge": "Solo inglés"
+    },
+    "base": {
+      "label": "Whisper Básico",
+      "description": "Rápido",
+      "details": "Transcripción fiable con bajos requisitos de memoria. Ideal para el día a día.",
+      "badge": "Multilingüe"
+    },
+    "base_en": {
+      "label": "Whisper Básico",
+      "description": "Rápido",
+      "details": "Transcripción en inglés fiable con poca memoria. Ideal para el día a día.",
+      "badge": "Solo inglés"
+    },
+    "small": {
+      "label": "Whisper Pequeño",
+      "description": "Equilibrado",
+      "details": "Equilibrio entre velocidad y precisión con memoria moderada. Maneja bien acentos variados.",
+      "badge": "Multilingüe"
+    },
+    "small_en": {
+      "label": "Whisper Pequeño",
+      "description": "Equilibrado",
+      "details": "Equilibrio entre velocidad y precisión en inglés con memoria moderada.",
+      "badge": "Solo inglés"
+    },
+    "medium": {
+      "label": "Whisper Mediano",
+      "description": "Preciso",
+      "details": "Alta precisión con velocidad moderada y memoria media. Bueno para audio difícil.",
+      "badge": "Multilingüe"
+    },
+    "medium_en": {
+      "label": "Whisper Mediano",
+      "description": "Preciso",
+      "details": "Alta precisión en inglés con velocidad moderada. Bueno para audio difícil.",
+      "badge": "Solo inglés"
+    },
+    "large_v3_turbo": {
+      "label": "Whisper Grande Turbo",
+      "description": "Rápido y preciso",
+      "details": "Excelente precisión con más velocidad que el modelo Grande y memoria moderada.",
+      "badge": "Multilingüe"
+    },
+    "large_v3": {
+      "label": "Whisper Grande",
+      "description": "Máxima precisión",
+      "details": "Máxima precisión para audio complejo, pero más lento y requiere mucha memoria.",
+      "badge": "Multilingüe"
+    },
+    "parakeet": {
+      "label": "Parakeet",
+      "description": "Rápido y preciso",
+      "details": "Excelente precisión y velocidad para idiomas europeos.",
+      "badge": "Europeo"
+    },
+    "moonshine_tiny": {
+      "label": "Moonshine Diminuto",
+      "description": "Ultrarrápido",
+      "details": "Transcripción en inglés ultrarrápida en el dispositivo con recursos mínimos. Ideal para uso en tiempo real.",
+      "badge": "Solo inglés"
+    },
+    "moonshine_tiny_ar": {
+      "label": "Moonshine Diminuto",
+      "description": "Ultrarrápido",
+      "details": "Transcripción rápida en árabe en el dispositivo con recursos mínimos.",
+      "badge": "Árabe"
+    },
+    "moonshine_tiny_zh": {
+      "label": "Moonshine Diminuto",
+      "description": "Ultrarrápido",
+      "details": "Transcripción rápida en chino en el dispositivo con recursos mínimos.",
+      "badge": "Chino"
+    },
+    "moonshine_tiny_ja": {
+      "label": "Moonshine Diminuto",
+      "description": "Ultrarrápido",
+      "details": "Transcripción rápida en japonés en el dispositivo con recursos mínimos.",
+      "badge": "Japonés"
+    },
+    "moonshine_tiny_ko": {
+      "label": "Moonshine Diminuto",
+      "description": "Ultrarrápido",
+      "details": "Transcripción rápida en coreano en el dispositivo con recursos mínimos.",
+      "badge": "Coreano"
+    },
+    "moonshine_tiny_uk": {
+      "label": "Moonshine Diminuto",
+      "description": "Ultrarrápido",
+      "details": "Transcripción rápida en ucraniano en el dispositivo con recursos mínimos.",
+      "badge": "Ucraniano"
+    },
+    "moonshine_tiny_vi": {
+      "label": "Moonshine Diminuto",
+      "description": "Ultrarrápido",
+      "details": "Transcripción rápida en vietnamita en el dispositivo con recursos mínimos.",
+      "badge": "Vietnamita"
+    },
+    "moonshine_base": {
+      "label": "Moonshine Básico",
+      "description": "Rápido y preciso",
+      "details": "Transcripción rápida en inglés en el dispositivo con mejor precisión que Moonshine Tiny.",
+      "badge": "Solo inglés"
+    },
+    "moonshine_base_es": {
+      "label": "Moonshine Básico",
+      "description": "Rápido y preciso",
+      "details": "Transcripción rápida en español en el dispositivo con buena precisión.",
+      "badge": "Español"
+    }
+  },
+  "completion": {
+    "processingComplete": "Proceso completado",
+    "subtitlesReady": "¡Tus subtítulos están listos para usar!",
+    "viewSubtitles": "Ver subtítulos",
+    "exportToFile": "Exportar a archivo",
+    "addToTimeline": "Añadir a la línea de tiempo"
+  },
+  "progressSteps": {
+    "download": "Descargando modelo",
+    "diarize": "Identificando hablantes",
+    "transcribe": "Voz a texto",
+    "translate": "Traduciendo a {{language}}",
+    "processing": "Procesando",
+    "export": "Exportar"
+  },
+  "subtitles": {
+    "title": "Subtítulos",
+    "speakers": "Hablantes",
+    "editSpeakers": "Editar hablantes",
+    "reformat": "Reformatear",
+    "waitingForSubtitles": "Esperando subtítulos...",
+    "searchPlaceholder": "Buscar subtítulos...",
+    "searchAria": "Buscar subtítulos",
+    "clearSearch": "Borrar búsqueda",
+    "search": {
+      "caseMatch": "Coincidir mayúsculas/minúsculas",
+      "wholeWord": "Palabra completa",
+      "replaceAll": "Reemplazar todo",
+      "replaceWithPlaceholder": "Reemplazar con..."
+    },
+    "addToTimeline": "Añadir a la línea de tiempo",
+    "loading": "Cargando subtítulos...",
+    "jumpToTimeline": "Saltar a este punto en la línea de tiempo",
+    "unknownSpeaker": "Hablante desconocido",
+    "empty": {
+      "noSubtitlesFound": "No se encontraron subtítulos",
+      "tryDifferentSearch": "Prueba con otro término de búsqueda",
+      "noSubtitlesAvailable": "Tus subtítulos aparecerán aquí cuando termine la transcripción"
+    }
+  },
+  "subtitleEditor": {
+    "title": "Editar subtítulo",
+    "description": "Edita el texto del subtítulo modificando las palabras de abajo",
+    "mergeLeft": "Combinar a la izquierda",
+    "mergeRight": "Combinar a la derecha",
+    "deleteWord": "Eliminar palabra"
+  },
+  "languagePicker": {
+    "title": "Elige tu idioma",
+    "description": "Selecciona el idioma que quieres usar en la aplicación.",
+    "continue": "Continuar"
+  },
+  "titlebar": {
+    "transcripts": {
+      "searchPlaceholder": "Buscar transcripciones...",
+      "loading": "Cargando...",
+      "empty": "No se encontraron transcripciones."
+    },
+    "windowControls": {
+      "minimize": "Minimizar",
+      "maximize": "Maximizar",
+      "close": "Cerrar"
+    },
+    "update": {
+      "downloading": "Descargando actualización",
+      "installUpdateNow": "Instalar actualización ahora"
+    },
+    "resolve": {
+      "productName": "DaVinci Resolve",
+      "status": {
+        "connected": "Conectado",
+        "disconnected": "Desconectado"
+      },
+      "tooltip": {
+        "connected": "Conectado",
+        "currentlyViewing": "Viendo actualmente: {{name}}",
+        "ready": "Listo para acceder a la línea de tiempo",
+        "canGetAudio": "Puedes obtener el audio de la línea de tiempo y añadirle subtítulos.",
+        "cantConnect": "No se puede conectar a la línea de tiempo",
+        "openResolve": "Abre DaVinci Resolve y ve a Workspace → Scripts → AutoSubs"
+      }
+    }
+  },
+  "theme": {
+    "toggle": "Cambiar tema"
+  },
+  "addToTimeline": {
+    "title": "Añadir a la línea de tiempo",
+    "templateTheme": "Tema de plantilla",
+    "selectTemplate": "Seleccionar plantilla",
+    "outputTrack": "Pista de salida",
+    "selectOutputTrack": "Seleccionar pista de salida",
+    "adding": "Añadiendo...",
+    "steps": {
+      "template": {
+        "title": "Plantilla",
+        "description": "Elige una plantilla de estilo"
+      },
+      "speakers": {
+        "title": "Hablantes",
+        "description": "Configura pistas y colores de hablantes"
+      },
+      "outputTrack": {
+        "title": "Pista de salida",
+        "description": "Selecciona la pista de subtítulos"
+      }
+    }
+  },
+  "replaceStrings": {
+    "title": "Buscar/Reemplazar palabras",
+    "find": "Buscar",
+    "findPlaceholder": "Texto a buscar...",
+    "matchCase": "Coincidir mayúsculas/minúsculas",
+    "replaceWith": "Reemplazar con",
+    "replacePlaceholder": "Texto de reemplazo...",
+    "occurrencesFound": "{{count}} coincidencia encontrada",
+    "occurrencePosition": "{{current}} de {{total}}",
+    "noOccurrencesFound": "No se encontraron coincidencias",
+    "replaceCurrent": "Reemplazar actual",
+    "replaceAll": "Reemplazar todo ({{count}})"
+  }
+}

@@ -1,0 +1,456 @@
+{
+  "settings": {
+    "title": "Settings",
+    "description": "Configure your AutoSubs preferences and options.",
+    "sections": {
+      "transcription": "Transcription",
+      "support": "Support",
+      "appearance": "Appearance",
+      "language": "Language"
+    },
+    "gpu": {
+      "title": "GPU Acceleration",
+      "description": "Utilise GPU for faster transcription"
+    },
+    "dtw": {
+      "title": "Dynamic Time Warping",
+      "description": "Improve word-level timing accuracy"
+    },
+    "uiLanguage": {
+      "title": "App Language",
+      "description": "Updates menus and buttons",
+      "showPickerAgain": "Show language picker again"
+    },
+    "reset": {
+      "button": "Reset Settings",
+      "confirm": "Are you sure you want to reset all settings, including transcription settings? This action cannot be undone.",
+      "confirmTitle": "Reset Settings"
+    },
+    "support": {
+      "supportAutoSubs": "Support AutoSubs",
+      "helpSupportDevelopment": "Help support development",
+      "viewSource": "Contribute"
+    }
+  },
+  "common": {
+    "close": "Close",
+    "cancel": "Cancel",
+    "back": "Back",
+    "next": "Next",
+    "saveChanges": "Save Changes",
+    "apply": "Apply",
+    "add": "Add",
+    "done": "Done",
+    "delete": "Delete",
+    "generateSubtitles": "Generate Subtitles"
+  },
+  "importExport": {
+    "button": "Export / Import",
+    "importTab": "Import",
+    "exportTab": "Export",
+    "dropHere": "Drop file here or click to select",
+    "supportsSrt": "Supports .srt files",
+    "selected": "Selected:",
+    "importFile": "Import File",
+    "includeSpeakerLabels": "Include speaker labels",
+    "exportAsSrt": "Export as SRT",
+    "exportAsJson": "Export as JSON",
+    "downloadFormat": "Download {{format}}",
+    "fileDialog": {
+      "subtitleFiles": "Subtitle Files"
+    },
+    "exportFormats": {
+      "srt": {
+        "title": "Subtitles (.srt)",
+        "description": "Standard subtitle format for apps like YouTube and VLC. Includes timestamps."
+      },
+      "txt": {
+        "title": "Transcript (.txt)",
+        "description": "Plain text export for LLMs that includes speaker labels when available."
+      }
+    }
+  },
+  "actionBar": {
+    "common": {
+      "auto": "Auto",
+      "on": "On",
+      "off": "Off"
+    },
+    "mode": {
+      "fileInput": "File",
+      "timeline": "Timeline"
+    },
+    "format": {
+      "button": "Format",
+      "removePunctuationTitle": "Remove Punctuation",
+      "removePunctuationDescription": "Removes commas, periods, etc.",
+      "textCaseTitle": "Text Case",
+      "textCaseDescription": "Modify subtitle case",
+      "textCase": {
+        "normal": "Normal",
+        "lowercase": "lowercase",
+        "uppercase": "UPPERCASE",
+        "titleCase": "Title Case"
+      },
+      "characterLimitTitle": "Character Limit",
+      "characterLimitDescription": "Per line (0 = auto)",
+      "lineCountTitle": "Line Count",
+      "lineCountDescription": "Max lines per subtitle"
+    },
+    "censor": {
+      "title": "Censor Words",
+      "wordCount": "{{count}} words",
+      "dialogTitle": "Censor Sensitive Words",
+      "dialogDescription": "Add words to be censored in the subtitles.",
+      "inputPlaceholder": "Add word to censor",
+      "empty": "No censored words yet."
+    },
+    "speakers": {
+      "title": "Speaker Labels",
+      "description": "Identify different speakers",
+      "countTitle": "Number of Speakers",
+      "disabled": "Disabled"
+    },
+    "tracks": {
+      "selectTracks": "Select tracks...",
+      "trackN": "Track {{n}}",
+      "countSelected": "{{count}} tracks selected",
+      "selectedLabel": "{{label}} selected",
+      "noneSelected": "No tracks selected",
+      "clickToSelect": "Click to select audio tracks",
+      "selectAll": "Select All",
+      "clearAll": "Clear All",
+      "noneFound": "No audio tracks found.",
+      "createTrack": "Create an audio track in your current timeline to start transcribing.",
+      "selectMultiple": "Click to select multiple tracks"
+    },
+    "fileDrop": {
+      "aria": "Drop audio file here or click to select",
+      "prompt": "Drop file or click",
+      "supports": "Supports most formats"
+    },
+    "fileDialog": {
+      "mediaFiles": "Media Files (ffmpeg-supported)"
+    },
+    "language": {
+      "source": "Source",
+      "translate": "Translate",
+      "searchSourcePlaceholder": "Search languages...",
+      "searchTargetPlaceholder": "Search target languages...",
+      "noLanguageFound": "No language found.",
+      "arrow": "→"
+    }
+  },
+  "speakerEditor": {
+    "title": "Edit Speakers",
+    "description": "These are the speakers detected in the audio.",
+    "jumpToSample": "Jump to sample in timeline",
+    "name": "Name",
+    "namePlaceholder": "Enter speaker name",
+    "outputTrack": "Output Track",
+    "selectTrack": "Select a track",
+    "appearance": "Appearance",
+    "colors": {
+      "fill": "Fill",
+      "outline": "Outline",
+      "border": "Border"
+    },
+    "generatingPreview": "Generating Preview...",
+    "generatePreview": "Generate Preview",
+    "subtitlePreview": "Subtitle Preview",
+    "continueEditing": "Continue Editing",
+    "saveAndAddToTimeline": "Save & Add to Timeline"
+  },
+  "workspace": {
+    "empty": {
+      "loadingModel": "Loading model into memory...",
+      "welcomeTitle": "Welcome to AutoSubs",
+      "welcomeDescription": "Select an audio source to start generating subtitles.",
+      "support": "Support AutoSubs"
+    }
+  },
+  "modelStatus": {
+    "cached": "Downloaded",
+    "available": "Not downloaded",
+    "storage": "Storage:",
+    "ram": "RAM:",
+    "accuracy": "Accuracy",
+    "lightweight": "Lightweight",
+    "downloadProgress": "{{progress}}%"
+  },
+  "models": {
+    "searchPlaceholder": "Search models...",
+    "noResults": "No models found.",
+    "filteredByLanguage": "Filtered by language",
+    "groups": {
+      "specialized": "Specialised for Selected Language",
+      "general": "General Models"
+    },
+    "filters": {
+      "weight": "Lightweight",
+      "accuracy": "Accuracy", 
+      "recommended": "Recommended",
+      "search": "Search",
+      "clear": "Clear filter"
+    },
+    "englishOnly": {
+      "title": "English-Only Models",
+      "description": "Show specialised English models with higher accuracy for English transcription."
+    },
+    "manage": {
+      "title": "Models",
+      "description": "Delete cached models to free up disk space.",
+      "empty": "No downloaded models found",
+      "deleteModel": "Delete Model",
+      "confirmTitle": "Are you sure?",
+      "confirmBody": "This will delete the {{model}} model from your device. If you use this model in future it will need to be downloaded again."
+    },
+    "diarize": {
+      "label": "Speaker Diarization Model",
+      "description": "Speaker labeling bundle",
+      "details": "Used for speaker diarization and labeling.",
+      "badge": "Speaker Labels"
+    },
+    "tiny": {
+      "label": "Whisper Tiny",
+      "description": "Ultra-fast",
+      "details": "Fastest transcription with minimal memory. Ideal for quick drafts.",
+      "badge": "Multilingual"
+    },
+    "tiny_en": {
+      "label": "Whisper Tiny",
+      "description": "Ultra-fast",
+      "details": "Fastest English transcription with minimal memory. Ideal for quick drafts.",
+      "badge": "English Only"
+    },
+    "base": {
+      "label": "Whisper Base",
+      "description": "Fast",
+      "details": "Reliable transcription with low memory requirements. Great for everyday use.",
+      "badge": "Multilingual"
+    },
+    "base_en": {
+      "label": "Whisper Base",
+      "description": "Fast",
+      "details": "Reliable English transcription with low memory. Great for everyday use.",
+      "badge": "English Only"
+    },
+    "small": {
+      "label": "Whisper Small",
+      "description": "Balanced",
+      "details": "Balanced speed and accuracy with moderate memory. Handles varied accents well.",
+      "badge": "Multilingual"
+    },
+    "small_en": {
+      "label": "Whisper Small",
+      "description": "Balanced",
+      "details": "Balanced speed and English accuracy with moderate memory. Handles varied accents.",
+      "badge": "English Only"
+    },
+    "medium": {
+      "label": "Whisper Medium",
+      "description": "Accurate",
+      "details": "High accuracy transcription with moderate speed and memory. Good for challenging audio.",
+      "badge": "Multilingual"
+    },
+    "medium_en": {
+      "label": "Whisper Medium",
+      "description": "Accurate",
+      "details": "High accuracy English transcription with moderate speed. Good for challenging audio.",
+      "badge": "English Only"
+    },
+    "large_v3_turbo": {
+      "label": "Whisper Large Turbo",
+      "description": "Fast & Accurate",
+      "details": "Excellent accuracy with faster speed than Large model and moderate memory.",
+      "badge": "Multilingual"
+    },
+    "large_v3": {
+      "label": "Whisper Large",
+      "description": "Highest Accuracy",
+      "details": "Highest accuracy for complex audio, but slower and requires significant memory.",
+      "badge": "Multilingual"
+    },
+    "parakeet": {
+      "label": "Parakeet",
+      "description": "Fast & Accurate",
+      "details": "Excellent accuracy and speed for European languages.",
+      "badge": "European"
+    },
+    "moonshine_tiny": {
+      "label": "Moonshine Tiny",
+      "description": "Ultra-fast",
+      "details": "Extremely fast on-device English transcription with minimal resources. Ideal for real-time use.",
+      "badge": "English Only"
+    },
+    "moonshine_tiny_ar": {
+      "label": "Moonshine Tiny",
+      "description": "Ultra-fast",
+      "details": "Fast on-device Arabic transcription with minimal resources.",
+      "badge": "Arabic"
+    },
+    "moonshine_tiny_zh": {
+      "label": "Moonshine Tiny",
+      "description": "Ultra-fast",
+      "details": "Fast on-device Chinese transcription with minimal resources.",
+      "badge": "Chinese"
+    },
+    "moonshine_tiny_ja": {
+      "label": "Moonshine Tiny",
+      "description": "Ultra-fast",
+      "details": "Fast on-device Japanese transcription with minimal resources.",
+      "badge": "Japanese"
+    },
+    "moonshine_tiny_ko": {
+      "label": "Moonshine Tiny",
+      "description": "Ultra-fast",
+      "details": "Fast on-device Korean transcription with minimal resources.",
+      "badge": "Korean"
+    },
+    "moonshine_tiny_uk": {
+      "label": "Moonshine Tiny",
+      "description": "Ultra-fast",
+      "details": "Fast on-device Ukrainian transcription with minimal resources.",
+      "badge": "Ukrainian"
+    },
+    "moonshine_tiny_vi": {
+      "label": "Moonshine Tiny",
+      "description": "Ultra-fast",
+      "details": "Fast on-device Vietnamese transcription with minimal resources.",
+      "badge": "Vietnamese"
+    },
+    "moonshine_base": {
+      "label": "Moonshine Base",
+      "description": "Fast & Accurate",
+      "details": "Fast on-device English transcription with better accuracy than Moonshine Tiny.",
+      "badge": "English Only"
+    },
+    "moonshine_base_es": {
+      "label": "Moonshine Base",
+      "description": "Fast & Accurate",
+      "details": "Fast on-device Spanish transcription with good accuracy.",
+      "badge": "Spanish"
+    }
+  },
+  "completion": {
+    "processingComplete": "Processing Complete",
+    "subtitlesReady": "Your subtitles are ready to use!",
+    "viewSubtitles": "View Subtitles",
+    "exportToFile": "Export to File",
+    "addToTimeline": "Add to Timeline"
+  },
+  "progressSteps": {
+    "download": "Downloading model",
+    "diarize": "Identifying speakers",
+    "transcribe": "Speech to text",
+    "translate": "Translating to {{language}}",
+    "processing": "Processing",
+    "export": "Export"
+  },
+  "subtitles": {
+    "title": "Subtitles",
+    "speakers": "Speakers",
+    "editSpeakers": "Edit Speakers",
+    "reformat": "Reformat",
+    "waitingForSubtitles": "Waiting for subtitles...",
+    "searchPlaceholder": "Search subtitles...",
+    "searchAria": "Search subtitles",
+    "clearSearch": "Clear search",
+    "search": {
+      "caseMatch": "Case match",
+      "wholeWord": "Whole word",
+      "replaceAll": "Replace all",
+      "replaceWithPlaceholder": "Replace with..."
+    },
+    "addToTimeline": "Add to Timeline",
+    "loading": "Loading subtitles...",
+    "jumpToTimeline": "Jump to point on timeline",
+    "unknownSpeaker": "Unknown Speaker",
+    "empty": {
+      "noSubtitlesFound": "No subtitles found",
+      "tryDifferentSearch": "Try a different search term",
+      "noSubtitlesAvailable": "Your subtitles will appear here when finished transcribing"
+    }
+  },
+  "subtitleEditor": {
+    "title": "Edit Subtitle",
+    "description": "Edit the subtitle text by modifying the words below",
+    "mergeLeft": "Merge Left",
+    "mergeRight": "Merge Right",
+    "deleteWord": "Delete word"
+  },
+  "languagePicker": {
+    "title": "Choose your language",
+    "description": "Select the language you want to use in the app.",
+    "continue": "Continue"
+  },
+  "titlebar": {
+    "transcripts": {
+      "searchPlaceholder": "Search transcripts...",
+      "loading": "Loading...",
+      "empty": "No transcripts found."
+    },
+    "windowControls": {
+      "minimize": "Minimize",
+      "maximize": "Maximize",
+      "close": "Close"
+    },
+    "update": {
+      "downloading": "Downloading Update",
+      "installUpdateNow": "Install Update Now"
+    },
+    "resolve": {
+      "productName": "DaVinci Resolve",
+      "status": {
+        "connected": "Connected",
+        "disconnected": "Disconnected"
+      },
+      "tooltip": {
+        "connected": "Connected",
+        "currentlyViewing": "Currently viewing: {{name}}",
+        "ready": "Ready to access timeline",
+        "canGetAudio": "You can get audio from the timeline and add subtitles back to it.",
+        "cantConnect": "Can't connect to timeline",
+        "openResolve": "Open DaVinci Resolve and go to Workspace → Scripts → AutoSubs"
+      }
+    }
+  },
+  "theme": {
+    "toggle": "Toggle theme"
+  },
+  "addToTimeline": {
+    "title": "Add to Timeline",
+    "templateTheme": "Template Theme",
+    "selectTemplate": "Select template",
+    "outputTrack": "Output Track",
+    "selectOutputTrack": "Select output track",
+    "adding": "Adding...",
+    "steps": {
+      "template": {
+        "title": "Template",
+        "description": "Choose a style template"
+      },
+      "speakers": {
+        "title": "Speakers",
+        "description": "Configure speaker tracks and colors"
+      },
+      "outputTrack": {
+        "title": "Output Track",
+        "description": "Select the subtitle track"
+      }
+    }
+  },
+  "replaceStrings": {
+    "title": "Search/Replace Words",
+    "find": "Find",
+    "findPlaceholder": "Text to find...",
+    "matchCase": "Match Case",
+    "replaceWith": "Replace with",
+    "replacePlaceholder": "Replacement text...",
+    "occurrencesFound": "{{count}} occurrence found",
+    "occurrencePosition": "{{current}} of {{total}}",
+    "noOccurrencesFound": "No occurrences found",
+    "replaceCurrent": "Replace Current",
+    "replaceAll": "Replace All ({{count}})"
+  }
+}
