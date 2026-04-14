@@ -1,5 +1,5 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { Minus, Square, X, Settings, Sun, Moon, Monitor, Heart, Github, Boxes, RotateCcw } from "lucide-react";
+import { Minus, Square, X, Settings, Sun, Moon, Monitor, Heart, Github, Boxes, RotateCcw, Trash2 } from "lucide-react";
 import type { HistoryIconHandle } from "@/components/ui/history";
 import { platform } from "@tauri-apps/plugin-os";
 import { useTranslation } from "react-i18next";
@@ -271,7 +271,7 @@ function TranscriptsButton({ onTranscriptOpen }: { onTranscriptOpen?: () => void
   const [transcripts, setTranscripts] = useState<TranscriptListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
-  const { setSubtitles, setSpeakers, setCurrentTranscriptFilename } = useTranscript();
+  const { setSubtitles, setSpeakers, setCurrentTranscriptFilename, currentTranscriptFilename } = useTranscript();
   const historyIconRef = useRef<HistoryIconHandle>(null);
 
   useEffect(() => {
@@ -298,6 +298,43 @@ function TranscriptsButton({ onTranscriptOpen }: { onTranscriptOpen?: () => void
 
   const transcriptDateLocale = i18n.resolvedLanguage || i18n.language || undefined;
 
+  const handleDeleteTranscript = async (e: React.MouseEvent, transcript: TranscriptListItem) => {
+    e.stopPropagation();
+    const confirmed = window.confirm(t("titlebar.transcripts.deleteConfirm", { name: transcript.displayName }));
+    if (!confirmed) return;
+
+    try {
+      await invoke("delete_transcript", { filename: transcript.filename });
+      setTranscripts(prev => prev.filter(t => t.filename !== transcript.filename));
+      
+      // If deleted transcript is the one currently loaded, clear editor
+      if (currentTranscriptFilename === transcript.filename) {
+        setSubtitles([]);
+        setSpeakers([]);
+        setCurrentTranscriptFilename(null);
+      }
+    } catch (error) {
+      console.error('Failed to delete transcript:', error);
+    }
+  };
+
+  const handleClearAll = async () => {
+    const confirmed = window.confirm(t("titlebar.transcripts.clearAllConfirm"));
+    if (!confirmed) return;
+
+    try {
+      await invoke("delete_all_transcripts");
+      setTranscripts([]);
+      
+      // Clear current editor since all history is gone
+      setSubtitles([]);
+      setSpeakers([]);
+      setCurrentTranscriptFilename(null);
+    } catch (error) {
+      console.error('Failed to clear all transcripts:', error);
+    }
+  };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -314,7 +351,23 @@ function TranscriptsButton({ onTranscriptOpen }: { onTranscriptOpen?: () => void
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="end">
         <Command>
-          <CommandInput placeholder={t("titlebar.transcripts.searchPlaceholder")} />
+          <div className="flex items-center border-b px-3">
+            <CommandInput 
+              placeholder={t("titlebar.transcripts.searchPlaceholder")} 
+              className="flex-1 border-none focus:ring-0"
+            />
+            {transcripts.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                onClick={handleClearAll}
+                title={t("titlebar.transcripts.clearAll", "Clear All History")}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
           <CommandList>
             {loading && transcripts.length === 0 && !hasLoaded ? (
               <div className="py-4 text-center text-sm text-muted-foreground">
@@ -344,19 +397,29 @@ function TranscriptsButton({ onTranscriptOpen }: { onTranscriptOpen?: () => void
                       setOpen(false);
                     }}
                   >
-                    <div className="flex flex-col items-start gap-1">
-                      <span className="text-sm font-medium">
-                        {transcript.displayName}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {transcript.createdAt.toLocaleDateString(transcriptDateLocale, {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                          hour: 'numeric',
-                          minute: '2-digit'
-                        })}
-                      </span>
+                    <div className="flex items-center justify-between w-full group/item">
+                      <div className="flex flex-col items-start gap-1">
+                        <span className="text-sm font-medium">
+                          {transcript.displayName}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {transcript.createdAt.toLocaleDateString(transcriptDateLocale, {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        className="opacity-0 group-hover/item:opacity-100 h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-opacity"
+                        onClick={(e) => handleDeleteTranscript(e, transcript)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
                     </div>
                   </CommandItem>
                 ))}

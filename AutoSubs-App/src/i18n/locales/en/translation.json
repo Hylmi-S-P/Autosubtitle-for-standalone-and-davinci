@@ -388,7 +388,10 @@
     "transcripts": {
       "searchPlaceholder": "Search transcripts...",
       "loading": "Loading...",
-      "empty": "No transcripts found."
+      "empty": "No transcripts found.",
+      "deleteConfirm": "Delete transcript \"{{name}}\"?",
+      "clearAllConfirm": "Are you sure you want to clear all transcript history? This action cannot be undone.",
+      "clearAll": "Clear All History"
     },
     "windowControls": {
       "minimize": "Minimize",

@@ -7,7 +7,6 @@
   ],
   "permissions": [
     "core:default",
-    "updater:default",
     "shell:allow-open",
     "clipboard-manager:allow-write-text",
     {

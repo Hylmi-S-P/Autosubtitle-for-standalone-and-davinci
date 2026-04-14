@@ -64,7 +64,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   async function initializeStore() {
     try {
-      const loadedStore = await load('autosubs-store.json', { autoSave: false });
+      const loadedStore = await load('autosubs-store.json', { 
+        autoSave: false,
+        defaults: { settings: DEFAULT_SETTINGS }
+      });
       setStore(loadedStore);
 
       // If you store settings as a single object, you can get it all at once

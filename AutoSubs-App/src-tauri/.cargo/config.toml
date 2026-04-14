@@ -7,7 +7,7 @@ rustflags = ["-C", "link-arg=-mmacosx-version-min=13.3"]
 MACOSX_DEPLOYMENT_TARGET = "13.3"
 # Ensure CMake-based native builds (whisper-rs-sys/ggml) use the same target
 CMAKE_ARGS = "-DCMAKE_OSX_DEPLOYMENT_TARGET=13.3"
-WHISPER_DONT_GENERATE_BINDINGS = "1"
+
 
 
 [target.x86_64-pc-windows-msvc]

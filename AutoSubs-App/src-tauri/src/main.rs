@@ -9,7 +9,7 @@ use tauri::Emitter; // for app.emit
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering as AtomicOrdering};
 use std::sync::Arc;
 use tokio::sync::Notify;
-use tauri_plugin_updater::UpdaterExt;
+
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons};
 
 // Import plugins
@@ -36,12 +36,7 @@ mod tests;
 // Global guard to avoid re-entrant exit handling
 static EXITING: AtomicBool = AtomicBool::new(false);
 
-struct InstallSignal(Arc<Notify>);
 
-#[tauri::command]
-fn trigger_install_update(state: tauri::State<InstallSignal>) {
-    state.0.notify_one();
-}
 
 /// Send a local audio file to a Dockerized Faster-Whisper server and return
 /// the transcription as raw SRT text.
@@ -104,10 +99,53 @@ async fn transcribe_with_docker(file_path: String) -> Result<String, String> {
     Ok(srt_text)
 }
 
+#[tauri::command]
+async fn delete_transcript(filename: String, app_handle: tauri::AppHandle) -> Result<(), String> {
+    use tauri::Manager;
+    use std::fs;
+
+    let path = app_handle.path().document_dir()
+        .map_err(|e| e.to_string())?
+        .join("AutoSubs-Transcripts")
+        .join(&filename);
+
+    if path.exists() {
+        fs::remove_file(&path).map_err(|e| format!("Failed to delete transcript file: {}", e))?;
+    }
+
+    // Also update the index file if needed, but it's easier to let the frontend handle the index update via its logic
+    // or just delete the index item when the frontend re-lists files.
+    
+    Ok(())
+}
+
+#[tauri::command]
+async fn delete_all_transcripts(app_handle: tauri::AppHandle) -> Result<(), String> {
+    use tauri::Manager;
+    use std::fs;
+
+    let dir_path = app_handle.path().document_dir()
+        .map_err(|e| e.to_string())?
+        .join("AutoSubs-Transcripts");
+
+    if dir_path.exists() {
+        // We delete everything inside the directory
+        for entry in fs::read_dir(&dir_path).map_err(|e| e.to_string())? {
+            let entry = entry.map_err(|e| e.to_string())?;
+            let path = entry.path();
+            if path.is_file() {
+                fs::remove_file(path).map_err(|e| e.to_string())?;
+            }
+        }
+    }
+
+    Ok(())
+}
+
 fn main() {
     // Note: whisper-diarize-rs handles whisper_rs logging internally
     tauri::Builder::default()
-        .plugin(tauri_plugin_updater::Builder::new().build())
+
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_os::init())
         .plugin(StoreBuilder::default().build())
@@ -185,78 +223,7 @@ fn main() {
                 });
             }
 
-            // Check for updates in the background on startup (Tauri v2 Updater)
-            let install_signal = Arc::new(Notify::new());
-            app.manage(InstallSignal(install_signal.clone()));
 
-            let handle = app.handle().clone();
-            tauri::async_runtime::spawn(async move {
-                if let Ok(builder) = handle.updater_builder().build() {
-                  if let Ok(Some(info)) = builder.check().await {
-                    // Show a non-blocking confirmation dialog
-                    let title = "Update available".to_string();
-                    let message = format!("Version {} is available.\nInstall now?", info.version);
-                    let handle_for_cb = handle.clone();
-                    handle
-                      .dialog()
-                      .message(message)
-                      .title(title)
-                      .buttons(MessageDialogButtons::OkCancelCustom("Install".to_string(), "Later".to_string()))
-                      .show(move |should_update| {
-                        if should_update {
-                          // Perform download asynchronously, defer install until user triggers it
-                          let handle_for_dl = handle_for_cb.clone();
-                          let signal = install_signal.clone();
-                          tauri::async_runtime::spawn(async move {
-                            if let Ok(builder2) = handle_for_dl.updater_builder().build() {
-                              if let Ok(Some(update2)) = builder2.check().await {
-                                let downloaded = Arc::new(AtomicU64::new(0));
-                                let handle_progress = handle_for_dl.clone();
-
-                                // Download only — do NOT install yet
-                                let bytes = match update2
-                                  .download(
-                                    move |chunk, total| {
-                                      let prev = downloaded.fetch_add(chunk as u64, AtomicOrdering::Relaxed);
-                                      let current = prev + chunk as u64;
-                                      let percentage = total.map(|t| if t > 0 { (current as f64 / t as f64 * 100.0).min(100.0) } else { 0.0 }).unwrap_or(0.0);
-                                      let _ = handle_progress.emit("update-progress", json!({
-                                        "percentage": percentage,
-                                        "downloaded": current,
-                                        "total": total.unwrap_or(0)
-                                      }));
-                                    },
-                                    || {},
-                                  )
-                                  .await
-                                {
-                                  Ok(bytes) => bytes,
-                                  Err(e) => {
-                                    eprintln!("Update download failed: {e}");
-                                    let _ = handle_for_dl.emit("update-error", json!({ "error": e.to_string() }));
-                                    return;
-                                  }
-                                };
-
-                                // Notify frontend that update is ready to install
-                                let _ = handle_for_dl.emit("update-ready", json!({}));
-
-                                // Wait for user to click "Restart to Update"
-                                signal.notified().await;
-
-                                // Install the update (this calls std::process::exit internally)
-                                if let Err(e) = update2.install(bytes) {
-                                  eprintln!("Update install failed: {e}");
-                                  let _ = handle_for_dl.emit("update-error", json!({ "error": e.to_string() }));
-                                }
-                              }
-                            }
-                          });
-                        }
-                      });
-                  }
-                }
-            });
 
             Ok(())
         })
@@ -270,8 +237,10 @@ fn main() {
             logging::clear_backend_logs,
             logging::get_log_dir,
             logging::export_backend_logs,
-            trigger_install_update,
-            transcribe_with_docker
+
+            transcribe_with_docker,
+            delete_transcript,
+            delete_all_transcripts
         ])
         .build(tauri::generate_context!())
         .expect("error while building Tauri application")
