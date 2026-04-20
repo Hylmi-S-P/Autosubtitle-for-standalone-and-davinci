@@ -183,7 +183,7 @@ pub async fn transcribe_audio<R: Runtime>(
                     transcribe_options.whisper_to_english = Some(true);
                     transcribe_options.translate_target = None;
                 } else {
-                    // Non-English: use post-translation via Google Translate
+                    // Non-English: use post-translation via local AI
                     transcribe_options.whisper_to_english = Some(false);
                     transcribe_options.translate_target = Some(target);
                 }
