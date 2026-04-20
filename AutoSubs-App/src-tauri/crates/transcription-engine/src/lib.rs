@@ -12,8 +12,9 @@ pub mod speaker;
 // Re-exports (crate users only need these)
 pub use engine::{Engine, EngineConfig, Callbacks};
 pub use vad::get_segments;
-pub use types::{TranscribeOptions, Segment, WordTimestamp, ProgressType};
+pub use types::{TranscribeOptions, Segment, WordTimestamp, ProgressType, LabeledProgressFn};
 pub use model_manager::ModelManager;
+pub use translate::translate_segments;
 pub use utils::{get_translate_languages, get_whisper_languages};
 pub use formatting::{PostProcessConfig, process_segments, TextDensity};
 

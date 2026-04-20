@@ -1,5 +1,6 @@
 use reqwest;
-use serde_json::Value;
+use serde::{Serialize, Deserialize};
+use serde_json::json;
 use crate::types::{Segment, WordTimestamp, LabeledProgressFn, ProgressType};
 use futures::stream::{self, StreamExt};
 use tokio::time::{sleep, Duration};
@@ -36,55 +37,125 @@ fn normalize_google_lang(code: &str, is_target: bool) -> String {
     c
 }
 
-/// Translates text from one language to another.
+#[derive(Serialize)]
+struct ChatMessage {
+    role: String,
+    content: String,
+}
+
+#[derive(Serialize)]
+struct ChatCompletionRequest {
+    model: String,
+    messages: Vec<ChatMessage>,
+    temperature: f32,
+}
+
+#[derive(Deserialize)]
+struct ChatCompletionResponse {
+    choices: Vec<ChatChoice>,
+}
+
+#[derive(Deserialize)]
+struct ChatChoice {
+    message: ChatMessageResponse,
+}
+
+#[derive(Deserialize)]
+struct ChatMessageResponse {
+    content: String,
+}
+
+/// Translates text from one language to another using a local OpenAI-compatible service.
 pub async fn translate_text(text: &str, from: &str, to: &str) -> Result<String, Box<dyn std::error::Error>> {
-    let client = reqwest::Client::new();
-    let url = "https://translate.googleapis.com/translate_a/single";
+    // Ollama can take several seconds to load a model (e.g., 14s in your logs).
+    // We set a long timeout and more retries to accommodate this.
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(60))
+        .build()?;
+    
+    // Switch to 127.0.0.1 to ensure we hit the IPv4 address Ollama is listening on
+    let url = "http://127.0.0.1:11434/v1/chat/completions";
+    
+    // Using the confirmed model name from your Ollama list
+    let model = "translategemma:12b"; 
+    
+    println!("DEBUG: Starting translation pass for segment: '{}'", text.chars().take(20).collect::<String>());
+
     let sl = normalize_google_lang(from, false);
     let tl = normalize_google_lang(to, true);
 
-    let max_retries = 3u32;
+    let (full_sl, prompt_sl) = get_language_info(&sl);
+    let (full_tl, prompt_tl) = get_language_info(&tl);
+
+    let prompt = if sl == "auto" {
+        format!(
+            "You are a professional translator to {} ({}). Your goal is to accurately convey the meaning and nuances of the original text while adhering to {} grammar, vocabulary, and cultural sensitivities.\nProduce only the {} translation, without any additional explanations or commentary. Please translate the following text into {}:\n\n\n{}",
+            full_tl, prompt_tl, full_tl, full_tl, full_tl, text
+        )
+    } else {
+        format!(
+            "You are a professional {} ({}) to {} ({}) translator. Your goal is to accurately convey the meaning and nuances of the original {} text while adhering to {} grammar, vocabulary, and cultural sensitivities.\nProduce only the {} translation, without any additional explanations or commentary. Please translate the following {} text into {}:\n\n\n{}",
+            full_sl, prompt_sl, full_tl, prompt_tl, full_sl, full_tl, full_tl, full_sl, full_tl, text
+        )
+    };
+
+    let body = ChatCompletionRequest {
+        model: model.to_string(),
+        messages: vec![
+            ChatMessage {
+                role: "user".to_string(),
+                content: prompt,
+            },
+        ],
+        temperature: 0.1,
+    };
+
+    let max_retries = 10u32;
     let mut attempt = 0u32;
+    
     loop {
         let resp_result = client
-            .get(url)
-            .query(&[("client", "gtx"), ("sl", sl.as_str()), ("tl", tl.as_str()), ("dt", "t"), ("q", text)])
+            .post(url)
+            .json(&body)
             .send()
             .await;
 
         match resp_result {
             Ok(resp) => {
                 if resp.status().is_success() {
-                    let body = resp.text().await?;
-                    let translated_text: String = serde_json::from_str::<Value>(&body)?[0][0][0]
-                        .as_str()
-                        .unwrap_or("")
-                        .to_string();
-                    return Ok(translated_text);
-                } else if resp.status().as_u16() == 429 || resp.status().is_server_error() {
+                    let chat_resp: ChatCompletionResponse = resp.json().await?;
+                    if let Some(choice) = chat_resp.choices.get(0) {
+                        let translated = choice.message.content.trim().to_string();
+                        // Strip any potential quotes the LLM might have added
+                        let translated = translated.trim_matches('"').trim_matches('\'').trim().to_string();
+                        return Ok(translated);
+                    }
+                    return Err("No translation choices returned from local AI".into());
+                } else if resp.status().is_server_error() || resp.status().as_u16() == 429 {
                     if attempt >= max_retries { break; }
-                    let backoff_ms = 200u64 << attempt; // 200ms, 400ms, 800ms
-                    sleep(Duration::from_millis(backoff_ms)).await;
+                    sleep(Duration::from_millis(500 * (attempt as u64 + 1))).await;
                     attempt += 1;
                     continue;
                 } else {
-                    // Non-retryable status
                     let status = resp.status();
                     let body = resp.text().await.unwrap_or_default();
-                    return Err(format!("translate_text HTTP error {}: {}", status, body).into());
+                    return Err(format!("Local translation API error ({}): {}", status, body).into());
                 }
             }
             Err(e) => {
-                if attempt >= max_retries { return Err(e.into()); }
-                let backoff_ms = 200u64 << attempt;
-                sleep(Duration::from_millis(backoff_ms)).await;
+                println!("DEBUG: Translation attempt {} failed: {}", attempt + 1, e);
+                if attempt >= max_retries { 
+                    return Err(format!("Failed to connect to local translation service at {} after {} attempts. Ensure your Ollama server is running and the model '{}' is available. Error: {}", url, max_retries, model, e).into()); 
+                }
+                // Back off slightly longer to give the server time to breathe
+                sleep(Duration::from_millis(1000 * (attempt as u64 + 1))).await;
                 attempt += 1;
                 continue;
             }
         }
     }
 
-    Err("translate_text failed after retries".into())
+    Err("Local translation failed after maximum retries".into())
 }
 
 /// Translate a batch of segments in-place.
@@ -133,7 +204,8 @@ pub async fn translate_segments(
             Ok(tr) => {
                 out[k] = Some(tr);
             }
-            Err(_e) => {
+            Err(e) => {
+                println!("ERROR: Translation segment failed: {}", e);
                 // Leave as None to keep original text on error
             }
         }
@@ -198,3 +270,117 @@ fn regenerate_words_uniform(seg: &mut Segment) {
 }
 
 // get_translate_languages moved to utils.rs
+
+fn get_language_info<'a>(code: &'a str) -> (&'static str, &'a str) {
+    match code.to_lowercase().as_str() {
+        "af" => ("Afrikaans", "af"),
+        "sq" => ("Albanian", "sq"),
+        "am" => ("Amharic", "am"),
+        "ar" => ("Arabic", "ar"),
+        "hy" => ("Armenian", "hy"),
+        "az" => ("Azerbaijani", "az"),
+        "eu" => ("Basque", "eu"),
+        "be" => ("Belarusian", "be"),
+        "bn" => ("Bengali", "bn"),
+        "bs" => ("Bosnian", "bs"),
+        "bg" => ("Bulgarian", "bg"),
+        "ca" => ("Catalan", "ca"),
+        "ceb" => ("Cebuano", "ceb"),
+        "ny" => ("Chichewa", "ny"),
+        "zh" | "zh-cn" | "zh-hans" => ("Chinese (Simplified)", "zh-Hans"),
+        "zh-tw" | "zh-hant" => ("Chinese (Traditional)", "zh-Hant"),
+        "co" => ("Corsican", "co"),
+        "hr" => ("Croatian", "hr"),
+        "cs" => ("Czech", "cs"),
+        "da" => ("Danish", "da"),
+        "nl" => ("Dutch", "nl"),
+        "en" => ("English", "en"),
+        "eo" => ("Esperanto", "eo"),
+        "et" => ("Estonian", "et"),
+        "tl" | "fil" => ("Filipino", "fil-PH"),
+        "fi" => ("Finnish", "fi"),
+        "fr" => ("French", "fr"),
+        "fy" => ("Western Frisian", "fy"),
+        "gl" => ("Galician", "gl"),
+        "ka" => ("Georgian", "ka"),
+        "de" => ("German", "de"),
+        "el" => ("Greek", "el"),
+        "gu" => ("Gujarati", "gu"),
+        "ht" => ("Haitian", "ht"),
+        "ha" => ("Hausa", "ha"),
+        "haw" => ("Hawaiian", "haw"),
+        "he" => ("Hebrew", "he"),
+        "hi" => ("Hindi", "hi"),
+        "hmn" => ("Hmong", "hmn"),
+        "hu" => ("Hungarian", "hu"),
+        "is" => ("Icelandic", "is"),
+        "ig" => ("Igbo", "ig"),
+        "id" => ("Indonesian", "id"),
+        "ga" => ("Irish", "ga"),
+        "it" => ("Italian", "it"),
+        "ja" => ("Japanese", "ja"),
+        "jv" | "jw" => ("Javanese", "jv"),
+        "kn" => ("Kannada", "kn"),
+        "kk" => ("Kazakh", "kk"),
+        "km" => ("Central Khmer", "km"),
+        "rw" => ("Kinyarwanda", "rw"),
+        "ko" => ("Korean", "ko"),
+        "ku" => ("Kurdish", "ku"),
+        "ky" => ("Kyrgyz", "ky"),
+        "lo" => ("Lao", "lo"),
+        "la" => ("Latin", "la"),
+        "lv" => ("Latvian", "lv"),
+        "lt" => ("Lithuanian", "lt"),
+        "lb" => ("Luxembourgish", "lb"),
+        "mk" => ("Macedonian", "mk"),
+        "mg" => ("Malagasy", "mg"),
+        "ms" => ("Malay", "ms"),
+        "ml" => ("Malayalam", "ml"),
+        "mt" => ("Maltese", "mt"),
+        "mi" => ("Maori", "mi"),
+        "mr" => ("Marathi", "mr"),
+        "mn" => ("Mongolian", "mn"),
+        "my" => ("Burmese", "my"),
+        "ne" => ("Nepali", "ne"),
+        "no" | "nb" => ("Norwegian Bokmål", "nb"),
+        "nn" => ("Norwegian Nynorsk", "nn"),
+        "or" => ("Oriya", "or"),
+        "ps" => ("Pashto", "ps"),
+        "fa" => ("Persian", "fa"),
+        "pl" => ("Polish", "pl"),
+        "pt" => ("Portuguese", "pt"),
+        "pa" => ("Punjabi", "pa"),
+        "ro" => ("Romanian", "ro"),
+        "ru" => ("Russian", "ru"),
+        "sm" => ("Samoan", "sm"),
+        "gd" => ("Scottish Gaelic", "gd"),
+        "sr" => ("Serbian", "sr"),
+        "st" => ("Southern Sotho", "st"),
+        "sn" => ("Shona", "sn"),
+        "sd" => ("Sindhi", "sd"),
+        "si" => ("Sinhala", "si"),
+        "sk" => ("Slovak", "sk"),
+        "sl" => ("Slovenian", "sl"),
+        "so" => ("Somali", "so"),
+        "es" => ("Spanish", "es"),
+        "su" => ("Sundanese", "su"),
+        "sw" => ("Swahili", "sw"),
+        "sv" => ("Swedish", "sv"),
+        "tg" => ("Tajik", "tg"),
+        "ta" => ("Tamil", "ta"),
+        "te" => ("Telugu", "te"),
+        "th" => ("Thai", "th"),
+        "tr" => ("Turkish", "tr"),
+        "uk" => ("Ukrainian", "uk"),
+        "ur" => ("Urdu", "ur"),
+        "ug" => ("Uyghur", "ug"),
+        "uz" => ("Uzbek", "uz"),
+        "vi" => ("Vietnamese", "vi"),
+        "cy" => ("Welsh", "cy"),
+        "xh" => ("Xhosa", "xh"),
+        "yi" => ("Yiddish", "yi"),
+        "yo" => ("Yoruba", "yo"),
+        "zu" => ("Zulu", "zu"),
+        _ => ("Unknown", code)
+    }
+}

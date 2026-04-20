@@ -594,6 +594,8 @@ export function TranscriptionPanel({ onViewSubtitles }: { onViewSubtitles?: () =
         try {
           const srtText = await invoke<string>("transcribe_with_docker", {
             filePath: audioInfo.path,
+            translate: settings.translate,
+            targetLanguage: settings.targetLanguage,
           })
 
           completeAllProgressSteps()

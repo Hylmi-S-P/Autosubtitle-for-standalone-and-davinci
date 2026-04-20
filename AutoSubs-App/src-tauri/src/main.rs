@@ -38,65 +38,164 @@ static EXITING: AtomicBool = AtomicBool::new(false);
 
 
 
+use std::sync::{Mutex, OnceLock};
+
+static LAST_DOCKER_TRANSCRIPT: OnceLock<Mutex<Option<(String, serde_json::Value)>>> = OnceLock::new();
+
 /// Send a local audio file to a Dockerized Faster-Whisper server and return
 /// the transcription as raw SRT text.
 ///
 /// This is an alternative transcription route that bypasses the built-in
 /// transcription engine. The existing engine logic is left completely intact.
 #[tauri::command]
-async fn transcribe_with_docker(file_path: String) -> Result<String, String> {
-    // 1. Read the audio file from disk
-    let file_bytes = tokio::fs::read(&file_path)
-        .await
-        .map_err(|e| format!("Failed to read audio file '{}': {}", file_path, e))?;
+async fn transcribe_with_docker(
+    file_path: String,
+    translate: Option<bool>,
+    target_language: Option<String>,
+) -> Result<String, String> {
+    // 1. Check if we already have the transcript for this file cached
+    let cache_mutex = LAST_DOCKER_TRANSCRIPT.get_or_init(|| Mutex::new(None));
+    let cached_json = {
+        let guard = cache_mutex.lock().unwrap();
+        if let Some(data) = guard.as_ref() {
+            if data.0 == file_path {
+                Some(data.1.clone())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    };
 
-    // Derive the filename for the multipart field
-    let file_name = std::path::Path::new(&file_path)
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("audio.wav")
-        .to_string();
-
-    // 2. Build multipart form
-    let file_part = reqwest::multipart::Part::bytes(file_bytes)
-        .file_name(file_name)
-        .mime_str("application/octet-stream")
-        .map_err(|e| format!("Failed to build file part: {}", e))?;
-
-    let form = reqwest::multipart::Form::new()
-        .part("file", file_part)
-        .text("model", "deepdml/faster-whisper-large-v3-turbo-ct2")
-        .text("response_format", "srt");
-
-    // 3. Send the request to the local Docker API
-    let client = reqwest::Client::new();
-    let response = client
-        .post("http://localhost:8000/v1/audio/transcriptions")
-        .multipart(form)
-        .send()
-        .await
-        .map_err(|e| format!("HTTP request to Docker Faster-Whisper API failed: {}", e))?;
-
-    // 4. Check for a successful status code
-    if !response.status().is_success() {
-        let status = response.status();
-        let body = response
-            .text()
+    let json_response: serde_json::Value = if let Some(json) = cached_json {
+        println!("DEBUG: Using cached transcription for {}", file_path);
+        json
+    } else {
+        // 2. Read the audio file from disk
+        let file_bytes = tokio::fs::read(&file_path)
             .await
-            .unwrap_or_else(|_| "<could not read response body>".to_string());
-        return Err(format!(
-            "Docker API returned HTTP {}: {}",
-            status, body
+            .map_err(|e| format!("Failed to read audio file '{}': {}", file_path, e))?;
+
+        let file_name = std::path::Path::new(&file_path)
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("audio.wav")
+            .to_string();
+
+        // 3. Build multipart form
+        let file_part = reqwest::multipart::Part::bytes(file_bytes)
+            .file_name(file_name)
+            .mime_str("application/octet-stream")
+            .map_err(|e| format!("Failed to build file part: {}", e))?;
+
+        let form = reqwest::multipart::Form::new()
+            .part("file", file_part)
+            .text("model", "deepdml/faster-whisper-large-v3-turbo-ct2")
+            .text("response_format", "verbose_json");
+
+        // 4. Send the request to the local Docker API
+        let client = reqwest::Client::new();
+        let response = client
+            .post("http://localhost:8000/v1/audio/transcriptions")
+            .multipart(form)
+            .send()
+            .await
+            .map_err(|e| format!("HTTP request to Docker Faster-Whisper API failed: {}", e))?;
+
+        // 5. Check for a successful status code
+        if !response.status().is_success() {
+            let status = response.status();
+            let body = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "<could not read response body>".to_string());
+            return Err(format!(
+                "Docker API returned HTTP {}: {}",
+                status, body
+            ));
+        }
+
+        // 6. Parse the verbose_json response
+        let json_response: serde_json::Value = response
+            .json()
+            .await
+            .map_err(|e| format!("Failed to parse JSON response: {}", e))?;
+            
+        // Cache it for future reuse
+        if let Ok(mut guard) = cache_mutex.lock() {
+            *guard = Some((file_path.clone(), json_response.clone()));
+        }
+        
+        json_response
+    };
+
+    // 6. Convert to transcription_engine::Segment objects
+    let mut segments = Vec::new();
+    if let Some(segs_arr) = json_response.get("segments").and_then(|v| v.as_array()) {
+        for s in segs_arr {
+            let start = s.get("start").and_then(|v| v.as_f64()).unwrap_or(0.0);
+            let end = s.get("end").and_then(|v| v.as_f64()).unwrap_or(0.0);
+            let text = s.get("text").and_then(|v| v.as_str()).unwrap_or("").to_string();
+            
+            let mut words = Vec::new();
+            if let Some(words_arr) = s.get("words").and_then(|v| v.as_array()) {
+                for w in words_arr {
+                    words.push(transcription_engine::WordTimestamp {
+                        text: w.get("word").and_then(|v| v.as_str()).unwrap_or("").to_string(),
+                        start: w.get("start").and_then(|v| v.as_f64()).unwrap_or(0.0),
+                        end: w.get("end").and_then(|v| v.as_f64()).unwrap_or(0.0),
+                        probability: w.get("probability").and_then(|v| v.as_f64()).map(|v| v as f32),
+                    });
+                }
+            }
+            
+            segments.push(transcription_engine::Segment {
+                start,
+                end,
+                text,
+                words: if words.is_empty() { None } else { Some(words) },
+                speaker_id: None,
+            });
+        }
+    }
+
+    // 7. Perform translation if requested
+    if translate.unwrap_or(false) {
+        if let Some(target) = target_language {
+            // Do not translate if target is auto
+            if target != "auto" {
+                let detected_lang = json_response.get("language").and_then(|v| v.as_str()).unwrap_or("auto");
+                println!("DEBUG: Docker route initiating translation from {} to {}", detected_lang, target);
+                // Call translate_segments
+                if let Err(e) = transcription_engine::translate_segments(&mut segments, detected_lang, &target, None).await {
+                    println!("ERROR: Docker route translation failed: {}", e);
+                }
+            }
+        }
+    }
+
+    // 8. Convert to SRT format for the frontend
+    let mut srt_out = String::new();
+    for (i, seg) in segments.iter().enumerate() {
+        // Format times to HH:MM:SS,MMM
+        let format_time = |time: f64| -> String {
+            let hours = (time / 3600.0) as u32;
+            let mins = ((time % 3600.0) / 60.0) as u32;
+            let secs = (time % 60.0) as u32;
+            let millis = ((time.fract()) * 1000.0) as u32;
+            format!("{:02}:{:02}:{:02},{:03}", hours, mins, secs, millis)
+        };
+        
+        srt_out.push_str(&format!("{}\n{} --> {}\n{}\n\n", 
+            i + 1, 
+            format_time(seg.start), 
+            format_time(seg.end), 
+            seg.text.trim()
         ));
     }
 
-    // 5. Return the raw SRT text
-    let srt_text = response
-        .text()
-        .await
-        .map_err(|e| format!("Failed to read response body: {}", e))?;
-
-    Ok(srt_text)
+    Ok(srt_out)
 }
 
 #[tauri::command]
