@@ -573,3 +573,27 @@ pub async fn reformat_subtitles(
 
     Ok(result)
 }
+
+#[cfg(test)]
+mod local_tests {
+    use super::*;
+
+    #[test]
+    fn test_round_to_places() {
+        // Positive numbers
+        assert_eq!(round_to_places(1.23456, 2), 1.23);
+        assert_eq!(round_to_places(1.23999, 2), 1.23); // It truncates, doesn't round to nearest
+        assert_eq!(round_to_places(1.0, 2), 1.0);
+
+        // Zero places
+        assert_eq!(round_to_places(1.234, 0), 1.0);
+
+        // Negative numbers
+        assert_eq!(round_to_places(-1.23456, 2), -1.23);
+        assert_eq!(round_to_places(-1.23999, 2), -1.23); // Truncates towards zero
+
+        // Edge cases
+        assert_eq!(round_to_places(0.0, 5), 0.0);
+        assert_eq!(round_to_places(123.456, 10), 123.456);
+    }
+}
