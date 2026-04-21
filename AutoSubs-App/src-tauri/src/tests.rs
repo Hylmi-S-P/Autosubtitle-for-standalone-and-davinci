@@ -88,4 +88,71 @@ mod tests {
             eprintln!("Saved VAD transcript to {}", out_path);
         }
     }
+
+    #[tokio::test]
+    async fn test_path_traversal_vulnerability_fixed() {
+        use crate::delete_transcript;
+        use tauri::Manager;
+
+        let app = mock_builder()
+            .build(mock_context(noop_assets()))
+            .expect("failed to build test app");
+        let handle = app.handle().clone();
+
+        let doc_dir = handle.path().document_dir().expect("failed to get doc dir");
+        let transcript_dir = doc_dir.join("AutoSubs-Transcripts");
+        fs::create_dir_all(&transcript_dir).expect("failed to create transcript dir");
+
+        // Create a "secret" file outside the transcripts directory
+        let secret_file_path = doc_dir.join("vulnerable_secret_fixed.txt");
+        fs::write(&secret_file_path, "this is a secret").expect("failed to write secret file");
+        assert!(secret_file_path.exists());
+
+        // Attempt to delete it via path traversal
+        let traversal_filename = "../vulnerable_secret_fixed.txt".to_string();
+        let result = delete_transcript(traversal_filename, handle.clone()).await;
+
+        // It should return an error now
+        assert!(
+            result.is_err(),
+            "delete_transcript should return Err when path traversal is attempted"
+        );
+        assert_eq!(
+            result.unwrap_err(),
+            "Invalid filename: path traversal or absolute paths not allowed"
+        );
+
+        // Check if the secret file still exists
+        assert!(
+            secret_file_path.exists(),
+            "Secret file should NOT have been deleted!"
+        );
+
+        // Clean up
+        fs::remove_file(&secret_file_path).ok();
+    }
+
+    #[tokio::test]
+    async fn test_delete_transcript_normal() {
+        use crate::delete_transcript;
+        use tauri::Manager;
+
+        let app = mock_builder()
+            .build(mock_context(noop_assets()))
+            .expect("failed to build test app");
+        let handle = app.handle().clone();
+
+        let doc_dir = handle.path().document_dir().expect("failed to get doc dir");
+        let transcript_dir = doc_dir.join("AutoSubs-Transcripts");
+        fs::create_dir_all(&transcript_dir).expect("failed to create transcript dir");
+
+        let filename = "normal_transcript.txt".to_string();
+        let file_path = transcript_dir.join(&filename);
+        fs::write(&file_path, "some content").expect("failed to write transcript file");
+        assert!(file_path.exists());
+
+        let result = delete_transcript(filename, handle).await;
+        assert!(result.is_ok());
+        assert!(!file_path.exists());
+    }
 }
