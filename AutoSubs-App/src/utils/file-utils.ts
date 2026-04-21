@@ -268,30 +268,6 @@ async function upsertTranscriptIndexItem(filename: string, metadata: TranscriptM
   await writeTranscriptIndex(items);
 }
 
-async function ensureTranscriptIndexItem(filename: string): Promise<TranscriptIndexItem | null> {
-  const items = await readTranscriptIndex();
-  const existingItem = items.find((item) => item.filename === filename);
-  if (existingItem) {
-    return existingItem;
-  }
-
-  const transcript = await readTranscript(filename) as StoredTranscript | null;
-  if (!transcript) {
-    return null;
-  }
-
-  const metadata = buildMetadata(transcript, filename, transcript.metadata);
-  const nextItem: TranscriptIndexItem = {
-    filename,
-    metadata,
-    createdAt: metadata.createdAt,
-  };
-
-  items.push(nextItem);
-  await writeTranscriptIndex(items);
-  return nextItem;
-}
-
 function getLegacyTranscriptFilename(isStandaloneMode: boolean, selectedFile: string | null, timelineId?: string): string | null {
   if (isStandaloneMode && selectedFile) {
     return `${stripExtension(getFileName(selectedFile))}.json`;
@@ -361,7 +337,13 @@ export function generateTranscriptFilename(
 
 export async function listTranscriptFiles(): Promise<TranscriptListItem[]> {
   const transcriptsDir = await getTranscriptsDir();
-  const entries = await readDir(transcriptsDir);
+  const [entries, indexItems] = await Promise.all([
+    readDir(transcriptsDir),
+    readTranscriptIndex(),
+  ]);
+
+  const indexMap = new Map(indexItems.map((item) => [item.filename, item]));
+  let indexModified = false;
 
   const transcriptFiles: Array<TranscriptListItem | null> = await Promise.all(
     entries
@@ -370,14 +352,32 @@ export async function listTranscriptFiles(): Promise<TranscriptListItem[]> {
         try {
           const filePath = await getTranscriptPath(entry.name);
           const fileStats = await stat(filePath);
-          const indexItem = await ensureTranscriptIndexItem(entry.name);
+
+          let indexItem = indexMap.get(entry.name);
+
+          if (!indexItem) {
+            const transcript = (await readTranscript(entry.name)) as StoredTranscript | null;
+            if (transcript) {
+              const metadata = buildMetadata(transcript, entry.name, transcript.metadata);
+              indexItem = {
+                filename: entry.name,
+                metadata,
+                createdAt: metadata.createdAt,
+              };
+              indexMap.set(entry.name, indexItem);
+              indexModified = true;
+            }
+          }
+
           const metadata = indexItem?.metadata
             ? buildMetadata(indexItem, entry.name, indexItem.metadata)
             : undefined;
-          const createdAt = (fileStats.mtime ? new Date(fileStats.mtime) : null)
-            || parseValidDate(indexItem?.metadata?.createdAt)
-            || parseValidDate(indexItem?.createdAt)
-            || new Date(0);
+
+          const createdAt =
+            (fileStats.mtime ? new Date(fileStats.mtime) : null) ||
+            parseValidDate(indexItem?.metadata?.createdAt) ||
+            parseValidDate(indexItem?.createdAt) ||
+            new Date(0);
 
           return {
             filename: entry.name,
@@ -395,6 +395,12 @@ export async function listTranscriptFiles(): Promise<TranscriptListItem[]> {
         }
       })
   );
+
+  if (indexModified) {
+    await writeTranscriptIndex(Array.from(indexMap.values())).catch((err) =>
+      console.error('Failed to update transcript index:', err)
+    );
+  }
 
   return transcriptFiles
     .filter((item): item is NonNullable<typeof item> => item !== null)
