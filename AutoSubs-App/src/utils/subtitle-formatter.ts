@@ -7,22 +7,22 @@ const PUNCTUATION_REGEX = /[^\p{L}\p{N}\s']+/gu;
  */
 export function joinWordsToText(words: Word[]): string {
     if (!words.length) return '';
-    let result = '';
+    const result: string[] = [];
     let prevLine = words[0].line_number ?? 0;
     for (let i = 0; i < words.length; i++) {
         const word = words[i];
         const currLine = word.line_number ?? 0;
         if (i > 0) {
             if (currLine !== prevLine) {
-                result += '\n';
+                result.push('\n');
             } else {
-                result += ' ';
+                result.push(' ');
             }
         }
-        result += word.word;
+        result.push(word.word);
         prevLine = currLine;
     }
-    return result.replace(/[ \t]+/g, ' ').replace(/ *\n */g, '\n').trim();
+    return result.join('').replace(/[ \t]+/g, ' ').replace(/ *\n */g, '\n').trim();
 }
 
 function applyCaseToWord(word: string, mode: 'lowercase' | 'uppercase' | 'titlecase' | 'none'): string {
