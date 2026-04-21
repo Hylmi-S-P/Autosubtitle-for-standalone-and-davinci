@@ -202,6 +202,20 @@ async fn transcribe_with_docker(
 async fn delete_transcript(filename: String, app_handle: tauri::AppHandle) -> Result<(), String> {
     use tauri::Manager;
     use std::fs;
+    use std::path::{Component, Path};
+
+    // Prevent path traversal by ensuring the filename is a simple filename and not a path
+    let mut components = Path::new(&filename).components();
+    let is_safe = match components.next() {
+        Some(Component::Normal(n)) => {
+            components.next().is_none() && n.to_str().map(|s| !s.contains('/') && !s.contains('\\')).unwrap_or(false)
+        }
+        _ => false,
+    };
+
+    if !is_safe {
+        return Err("Invalid filename: path traversal or absolute paths not allowed".to_string());
+    }
 
     let path = app_handle.path().document_dir()
         .map_err(|e| e.to_string())?
