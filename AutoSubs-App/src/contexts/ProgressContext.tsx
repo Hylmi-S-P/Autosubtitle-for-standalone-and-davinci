@@ -58,7 +58,6 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     // Only process events with known step types - ignore unknown/null types
     const knownTypes = ['Export', 'Download', 'Diarize', 'Transcribe', 'Translate']
     if (!event.type || !knownTypes.includes(event.type)) {
-      console.log('Ignoring progress event with unknown type:', event.type)
       return
     }
 
@@ -178,7 +177,6 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     // Also clear live preview segments when starting new transcription
     setLivePreviewSegments([])
     seenSegmentsRef.current.clear()
-    console.log('Cleared progress steps and live preview segments');
   }
   
   const completeAllProgressSteps = () => {
@@ -228,30 +226,24 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
       try {
         // Single progress listener that directly updates steps array
         await listen<{ progress: number, type?: string, label?: string }>('labeled-progress', (event: { payload: any }) => {
-          console.log('Received progress event:', JSON.stringify(event.payload, null, 2));
           updateProgressStep(event.payload);
         });
         
         // New segment listener for live preview
         await listen<string>('new-segment', (event: { payload: any }) => {
-          console.log('Received new segment:', event.payload);
-          
           // Check if this segment text already exists to prevent duplicates
           const segmentText = event.payload.trim();
           if (!segmentText) {
-            console.log('Skipping empty segment');
             return;
           }
           
           // Use the Set to track segments across all listener instances
           if (seenSegmentsRef.current.has(segmentText)) {
-            console.log('Skipping duplicate segment (Set):', segmentText);
             return;
           }
           
           // Add to seen segments
           seenSegmentsRef.current.add(segmentText);
-          console.log('Adding new segment:', segmentText);
           
           // Create a simple subtitle object from the text
           const newSegment: Subtitle = {
@@ -264,14 +256,12 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
           };
           
           setLivePreviewSegments(prev => {
-            console.log('Current segments count:', prev.length);
             return [...prev, newSegment];
           });
         });
         
         // Clear live preview and seen segments when transcription completes
         await listen('transcription-complete', () => {
-          console.log('Transcription complete, clearing live preview');
           setLivePreviewSegments([]);
           seenSegmentsRef.current.clear();
         });
