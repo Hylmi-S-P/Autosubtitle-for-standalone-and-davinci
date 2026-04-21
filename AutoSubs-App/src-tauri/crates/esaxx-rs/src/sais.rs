@@ -290,7 +290,7 @@ fn suffixsort(
         for i in (m..a).rev() {
             if suffix_array[i] != 0 {
                 suffix_array[ra_index + j] = suffix_array[i] - 1;
-                // XXX: Bug underflow caught by Rust yeah (well cpp used i32)
+                // Use saturating_sub to match the behavior of the original C++ implementation where j could underflow when it reaches the beginning of the array.
                 j = j.saturating_sub(1);
             }
         }
