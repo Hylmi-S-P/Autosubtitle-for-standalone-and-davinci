@@ -82,6 +82,11 @@ pub async fn transcribe_audio<R: Runtime>(
     app: AppHandle<R>,
     options: FrontendTranscribeOptions,
 ) -> Result<Transcript, String> {
+    // Security check: ensure the audio_path is within allowed directories
+    if !crate::is_path_allowed(&app, std::path::Path::new(&options.audio_path)) {
+        return Err("Access to the specified file is denied: outside of allowed scope".to_string());
+    }
+
     let start_time = Instant::now();
     println!("Starting transcription with options: {:?}", options);
 

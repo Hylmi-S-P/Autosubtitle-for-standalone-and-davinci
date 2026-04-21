@@ -42,6 +42,33 @@ use std::sync::{Mutex, OnceLock};
 
 static LAST_DOCKER_TRANSCRIPT: OnceLock<Mutex<Option<(String, serde_json::Value)>>> = OnceLock::new();
 
+/// Validates that a path is within the allowed directories (Desktop, Documents, Downloads, or Resource).
+pub fn is_path_allowed<R: tauri::Runtime>(app_handle: &tauri::AppHandle<R>, path: &std::path::Path) -> bool {
+    let canonical_path = match path.canonicalize() {
+        Ok(p) => p,
+        Err(_) => return false,
+    };
+
+    let allowed_dirs = [
+        app_handle.path().desktop_dir(),
+        app_handle.path().document_dir(),
+        app_handle.path().download_dir(),
+        app_handle.path().resource_dir(),
+    ];
+
+    for dir in allowed_dirs {
+        if let Ok(allowed_path) = dir {
+            if let Ok(canonical_allowed) = allowed_path.canonicalize() {
+                if canonical_path.starts_with(canonical_allowed) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    false
+}
+
 /// Send a local audio file to a Dockerized Faster-Whisper server and return
 /// the transcription as raw SRT text.
 ///
@@ -49,10 +76,16 @@ static LAST_DOCKER_TRANSCRIPT: OnceLock<Mutex<Option<(String, serde_json::Value)
 /// transcription engine. The existing engine logic is left completely intact.
 #[tauri::command]
 async fn transcribe_with_docker(
+    app_handle: tauri::AppHandle,
     file_path: String,
     translate: Option<bool>,
     target_language: Option<String>,
 ) -> Result<String, String> {
+    // Security check: ensure the file_path is within allowed directories
+    if !is_path_allowed(&app_handle, std::path::Path::new(&file_path)) {
+        return Err("Access to the specified file is denied: outside of allowed scope".to_string());
+    }
+
     // 1. Check if we already have the transcript for this file cached
     let cache_mutex = LAST_DOCKER_TRANSCRIPT.get_or_init(|| Mutex::new(None));
     let cached_json = {
