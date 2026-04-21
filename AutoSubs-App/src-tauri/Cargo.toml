@@ -1,7 +1,7 @@
 [workspace]
 members = [
   ".",
-  "crates/transcription-engine", "debug_bindgen",
+  "crates/transcription-engine", "debug_bindgen", "crates/esaxx-rs"
 ]
 resolver = "2"
 
