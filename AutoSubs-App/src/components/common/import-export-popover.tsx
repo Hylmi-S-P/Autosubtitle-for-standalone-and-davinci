@@ -5,7 +5,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/animated-tabs"
 import { open } from '@tauri-apps/plugin-dialog'
 import { downloadDir } from "@tauri-apps/api/path"
-import { getCurrentWebview } from "@tauri-apps/api/webview"
+import { getCurrentWebview, DragDropEvent } from "@tauri-apps/api/webview"
+import { Event } from "@tauri-apps/api/event"
 import { useTranslation } from "react-i18next"
 
 type ExportFormat = 'srt' | 'txt';
@@ -26,9 +27,9 @@ export function ImportExportPopover({ onImport, onExport, hasSubtitles, trigger 
         let unlisten: (() => void) | undefined;
         (async () => {
             const webview = await getCurrentWebview();
-            unlisten = await webview.onDragDropEvent((event: any) => {
+            unlisten = await webview.onDragDropEvent((event: Event<DragDropEvent>) => {
                 if (event.payload.type === 'drop') {
-                    const files = event.payload.paths as string[] | undefined;
+                    const files = event.payload.paths;
                     if (files && files.length > 0) {
                         const file = files[0];
                         // Accept common subtitle file types
