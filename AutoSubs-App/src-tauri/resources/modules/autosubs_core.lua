@@ -157,7 +157,7 @@ end
 
 -- Convert seconds to frames based on the timeline frame rate
 local function to_frames(seconds, frameRate)
-    return seconds * frameRate
+    return math.floor(seconds * frameRate + 0.5)
 end
 
 -- Pause execution for a specified number of seconds (platform-independent)
@@ -1045,15 +1045,27 @@ local function to_word_timing(transcript_words, frameRate, segmentStart)
     local result = {}
     local startIndex = 0
 
-    for _, word in ipairs(transcript_words) do
+    local prevLine = 0
+    if transcript_words and #transcript_words > 0 and transcript_words[1].line_number then
+        prevLine = transcript_words[1].line_number
+    end
+
+    for i, word in ipairs(transcript_words) do
+        local currLine = word.line_number or 0
+        if i > 1 then
+            -- Account for a space or newline separating words
+            startIndex = startIndex + 1
+        end
+
         local endIndex = startIndex + utf8len(word.word) - 1
         table.insert(result, {
             startIndex = startIndex,
             endIndex   = endIndex,
-            startFrame = math.floor((word.start - segmentStart) * frameRate),
-            endFrame   = math.floor((word["end"] - segmentStart) * frameRate),
+            startFrame = math.floor((word.start - segmentStart) * frameRate + 0.5),
+            endFrame   = math.floor((word["end"] - segmentStart) * frameRate + 0.5),
         })
         startIndex = endIndex + 1
+        prevLine = currLine
     end
 
     return result
