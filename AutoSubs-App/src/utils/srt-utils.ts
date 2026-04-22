@@ -1,8 +1,8 @@
-import { Subtitle } from "../types/interfaces";
+import type { Subtitle } from "../types/interfaces";
 
 // src/utils/srtUtils.ts
 export function formatTimecode(seconds: number): string {
-    const ms = Math.floor((seconds % 1) * 1000);
+    const ms = Math.round((seconds % 1) * 1000);
     const total = Math.floor(seconds);
     const s = total % 60;
     const m = Math.floor((total / 60) % 60);
