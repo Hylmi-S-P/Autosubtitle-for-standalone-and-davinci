@@ -5,11 +5,15 @@ use hf_hub::api::Progress as HubProgress;
 use std::fs;
 use std::io::Read;
 use std::path::{Path, PathBuf};
+use std::collections::HashSet;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::SystemTime;
 use tokio_util::sync::CancellationToken;
 use once_cell::sync::Lazy;
+
+// Cache for validated model files to avoid redundant I/O operations
+static VALIDATED_FILES: Lazy<Mutex<HashSet<PathBuf>>> = Lazy::new(|| Mutex::new(HashSet::new()));
 
 const DIARIZE_MODEL_ID: &str = "speaker-diarize";
 const DIARIZE_REPO_ID: &str = "altunenes/speaker-diarization-community-1-onnx";
@@ -826,6 +830,9 @@ impl ModelManager {
     /// Delete a cached model by name.
     /// Returns true if successfully deleted, false if model doesn't exist or deletion failed.
     pub fn delete_cached_model(&self, model_name: &str) -> bool {
+        // Clear validation cache since a model is being deleted
+        VALIDATED_FILES.lock().unwrap().clear();
+
         if model_name.starts_with("moonshine-") {
             return self.delete_moonshine_model(model_name).is_ok();
         }
@@ -1072,6 +1079,11 @@ fn resolve_symlink_target(path: &Path) -> Result<PathBuf> {
 }
 
 fn validate_model_file(path: &Path) -> Result<()> {
+    // Fast path: previously validated
+    if VALIDATED_FILES.lock().unwrap().contains(path) {
+        return Ok(());
+    }
+
     let blob_path = resolve_symlink_target(path)?;
     if !blob_path.exists() {
         bail!("Model blob target does not exist: {}", blob_path.display());
@@ -1095,11 +1107,17 @@ fn validate_model_file(path: &Path) -> Result<()> {
         let file = fs::File::open(&blob_path).context("open failed")?;
         let _ = zip::ZipArchive::new(file).context("invalid zip archive")?;
     }
+
+    VALIDATED_FILES.lock().unwrap().insert(path.to_path_buf());
     Ok(())
 }
 
 fn remove_snapshot_file_and_blob(path: &Path) -> Result<()> {
     if !path.exists() { return Ok(()); }
+
+    // Clear the cache since a model file or directory is being removed
+    VALIDATED_FILES.lock().unwrap().clear();
+
     let metadata = fs::symlink_metadata(path).context("symlink_metadata failed")?;
     if metadata.file_type().is_symlink() {
         let target_path = fs::read_link(path).context("read_link failed")?;
