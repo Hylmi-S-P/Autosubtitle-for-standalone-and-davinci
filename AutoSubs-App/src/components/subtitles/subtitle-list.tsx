@@ -48,6 +48,16 @@ const SubtitleList = ({
 
     const containerRef = useRef<HTMLDivElement>(null);
 
+    const pendingUpdatesRef = useRef<Map<number, string>>(new Map());
+    const flushUpdatesRef = useRef<(() => void) | null>(null);
+    const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (flushUpdatesRef.current) flushUpdatesRef.current();
+        };
+    }, []);
+
     const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
     const matchesQuery = useCallback((text: string, query: string) => {
@@ -77,6 +87,24 @@ const SubtitleList = ({
         });
         return hasZero ? 0 : 1;
     }, [subtitles]);
+
+    const flushUpdates = useCallback(() => {
+        if (pendingUpdatesRef.current.size === 0) return;
+
+        const nextSubtitles = [...subtitles];
+        let changed = false;
+        for (const [idx, text] of pendingUpdatesRef.current.entries()) {
+            if (nextSubtitles[idx]) {
+                nextSubtitles[idx] = { ...nextSubtitles[idx], text };
+                changed = true;
+            }
+        }
+        if (changed) {
+            updateSubtitles(nextSubtitles);
+        }
+        pendingUpdatesRef.current.clear();
+    }, [subtitles, updateSubtitles]);
+    flushUpdatesRef.current = flushUpdates;
 
     const getSpeakerIndex = useCallback((speakerId: string | undefined) => {
         if (!speakerId) return 0;
@@ -144,6 +172,9 @@ const SubtitleList = ({
 
     const selectSubtitle = useCallback((index: number) => {
         if (selectedIndex === index) return;
+
+        if (flushUpdatesRef.current) flushUpdatesRef.current();
+
         const initial = subtitles[index]?.text ?? "";
         setSelectedIndex(index);
         setDraftText(initial);
@@ -196,6 +227,9 @@ const SubtitleList = ({
 
     const handleMoveFirstWordToPrev = (index: number) => {
         if (index <= 0) return;
+
+        if (flushUpdatesRef.current) flushUpdatesRef.current();
+
         const words = splitIntoWords(draftText);
         if (words.length === 0) return;
 
@@ -225,6 +259,9 @@ const SubtitleList = ({
 
     const handleMoveLastWordToNext = (index: number) => {
         if (index >= subtitles.length - 1) return;
+
+        if (flushUpdatesRef.current) flushUpdatesRef.current();
+
         const words = splitIntoWords(draftText);
         if (words.length === 0) return;
 
@@ -368,11 +405,17 @@ const SubtitleList = ({
                                                 onInput={(e) => {
                                                     const nextText = (e.currentTarget.innerText ?? "").replace(/\r\n/g, "\n");
                                                     setDraftText(nextText);
-                                                    const existing = subtitles[index];
-                                                    if (!existing) return;
-                                                    const next = [...subtitles];
-                                                    next[index] = { ...existing, text: nextText };
-                                                    updateSubtitles(next);
+
+                                                    pendingUpdatesRef.current.set(index, nextText);
+
+                                                    // Replace previous debounce timeout
+                                                    if (debounceTimerRef.current) {
+                                                        clearTimeout(debounceTimerRef.current);
+                                                    }
+
+                                                    debounceTimerRef.current = setTimeout(() => {
+                                                        if (flushUpdatesRef.current) flushUpdatesRef.current();
+                                                    }, 500);
                                                 }}
                                                 onClick={(e) => e.stopPropagation()}
                                                 onKeyDown={(e) => {
