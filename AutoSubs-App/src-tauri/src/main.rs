@@ -232,7 +232,7 @@ async fn transcribe_with_docker(
 }
 
 #[tauri::command]
-async fn delete_transcript(filename: String, app_handle: tauri::AppHandle) -> Result<(), String> {
+async fn delete_transcript<R: tauri::Runtime>(filename: String, app_handle: tauri::AppHandle<R>) -> Result<(), String> {
     use tauri::Manager;
     use std::fs;
     use std::path::{Component, Path};
