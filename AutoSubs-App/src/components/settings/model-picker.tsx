@@ -144,6 +144,14 @@ export function ModelPicker({
     return models
   }, [modelsState, modelSupportsLanguage, selectedLanguage, searchQuery, activeFilter, t])
 
+  const modelIndexMap = React.useMemo(() => {
+    const map = new Map<string, number>()
+    modelsState.forEach((model, index) => {
+      map.set(model.value, index)
+    })
+    return map
+  }, [modelsState])
+
   return (
     <TooltipProvider delayDuration={400}>
       <Popover open={open} onOpenChange={onOpenChange}>
@@ -243,13 +251,15 @@ export function ModelPicker({
                     : filteredModels
 
                   const renderItem = (model: Model) => {
-                    const actualModelIndex = modelsState.findIndex(m => m.value === model.value)
+                    const actualModelIndex = modelIndexMap.get(model.value) ?? -1
                     return (
                       <CommandItem
                         key={model.value}
                         value={`${model.value} ${t(model.label)} ${t(model.description)}`}
                         onSelect={() => {
-                          onSelectModel(actualModelIndex)
+                          if (actualModelIndex !== -1) {
+                            onSelectModel(actualModelIndex)
+                          }
                           onOpenChange(false)
                         }}
                         className="flex items-center justify-between p-2 cursor-pointer"
