@@ -43,7 +43,7 @@ export function AddToTimelineDialog({
     onAddToTimeline
 }: AddToTimelineDialogProps) {
     const { t } = useTranslation()
-    const { speakers, updateSpeakers } = useTranscript()
+    const { speakers, updateSpeakers, reformatSubtitles } = useTranscript()
     const [open, setOpen] = useState(false)
     const [currentStep, setCurrentStep] = useState(0)
     const [selectedOutputTrack, setSelectedOutputTrack] = useState(settings.selectedOutputTrack)
@@ -70,6 +70,8 @@ export function AddToTimelineDialog({
             if (localSpeakers.length > 0) {
                 await updateSpeakers(localSpeakers)
             }
+            // Ensure formatting options match user settings before pushing to the timeline.
+            await reformatSubtitles(settings, null, timelineInfo?.timelineId || "")
             await onAddToTimeline(selectedOutputTrack, selectedTemplate)
             setOpen(false)
         } catch (error) {
