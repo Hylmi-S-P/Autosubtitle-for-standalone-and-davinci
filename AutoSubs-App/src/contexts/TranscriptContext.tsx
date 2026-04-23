@@ -122,18 +122,6 @@ export function TranscriptProvider({ children }: { children: React.ReactNode }) 
 
     setCurrentTranscriptFilename(filename);
 
-    const originalSegments: Subtitle[] = transcript.originalSegments || transcript.segments || [];
-
-    // Apply structural splitting via Rust
-    let formattedSegments = await rustReformatSubtitles(originalSegments, {
-      maxLines: settings.maxLinesPerSubtitle,
-      textDensity: settings.textDensity,
-      language: settings.language,
-    });
-
-    transcript.originalSegments = originalSegments;
-    transcript.segments = formattedSegments;
-
     // Save transcript to JSON file
     const { segments, speakers } = await saveTranscript(transcript, filename, {
       formatOptions: {
