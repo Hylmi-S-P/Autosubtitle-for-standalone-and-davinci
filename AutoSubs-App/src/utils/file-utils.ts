@@ -464,11 +464,9 @@ export async function saveTranscript(
 
     console.log('Saving transcript to:', filePath);
 
-    if (transcript.originalSegments) {
-      transcript.segments = transcript.originalSegments;
-    }
+    const sourceSegmentsForOriginal = transcript.originalSegments || transcript.segments;
 
-    const originalSegments: Subtitle[] = transcript.segments.map((segment: any, index: number) => {
+    const originalSegments: Subtitle[] = sourceSegmentsForOriginal.map((segment: any, index: number) => {
       let words = segment.words && segment.words.length > 0
         ? segment.words
         : interpolateWordsFromText(segment.text, segment.start, segment.end);
@@ -505,7 +503,8 @@ export async function saveTranscript(
 
     // Apply content formatting only (case, punctuation, censoring).
     // Structural splitting (line breaks, cue boundaries) is already done by Rust.
-    let segments: Subtitle[] = originalSegments;
+    // If the backend already provided structurally formatted segments, use them.
+    let segments: Subtitle[] = transcript.segments || originalSegments;
     const formatOptions = options?.formatOptions;
     if (formatOptions) {
       segments = segments.map(sub =>
